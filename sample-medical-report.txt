@@ -1,0 +1,100 @@
+NORTH METRO SUPER-SPECIALITY HOSPITAL
+Dept. of Internal Medicine + Cardio-Metabolic Unit
+Consolidated Investigative Dossier / OPD + ER Follow-up
+------------------------------------------------------------------
+UHID: NMH-24-778193      IP/OP No.: OP-2026-05-27-1904
+Pt. Name: M. R. ***      Sex/Age: M/47y
+Referred by: Dr. S. V. Rao (Consultant Physician)
+Collection Dt/Tm: 27-05-2026 07:14 AM
+Report Auth Dt/Tm: 28-05-2026 11:58 PM
+Specimen(s): EDTA WB / SERUM / PLASMA FLUORIDE / URINE SPOT
+Fasting status: "claimed fasting ~9h" (pt uncertain)
+Method notes: CLIA/ECLIA/IFCC-traceable; some params recalculated.
+
+============================= HEMOGRAM =============================
+Hb               : 11.2 g/dL    (13.0-17.0)
+Hct/PCV          : 35.9 %       (40-50)
+RBC              : 4.01 x10^6/uL (4.5-5.9)
+MCV              : 89.5 fL      (83-101)
+MCH              : 27.9 pg      (27-32)
+MCHC             : 31.2 g/dL    (31.5-34.5)
+RDW-CV           : 16.8 %       (11.6-14.0)
+TLC/WBC          : 12.97 x10^3/uL (4.0-10.0)
+N%/L%/M%/E%/B%   : 78 / 14 / 06 / 02 / 00
+Abs.Neut#        : 10.12 x10^3/uL (2.0-7.0)
+Platelet Cnt     : 489 x10^3/uL (150-410)
+ESR(1hr,Westergr): 38 mm/hr     (0-15)
+Peripheral smear note: anisopoikilocytosis ++ ; no blasts seen.
+
+========================= GLYCAEMIC PROFILE ========================
+FBS              : 148 mg/dL    (70-99)
+PPBS (2hr)       : 236 mg/dL    (<140)
+HbA1c (NGSP)     : 7.9 %        (4.0-5.6)
+eAG(calc)        : 180 mg/dL    (derived)
+Urine sugar      : ++           (Nil)
+Urine ketones    : trace        (Nil)
+
+========================= RENAL FUNCTION ============================
+Urea             : 56 mg/dL     (15-40)
+BUN(calc)        : 26.1 mg/dL   (7-20)
+Creatinine       : 1.64 mg/dL   (0.67-1.17)
+Uric acid        : 8.4 mg/dL    (3.4-7.0)
+Na+              : 132 mmol/L   (136-145)
+K+               : 5.6 mmol/L   (3.5-5.1)
+Cl-              : 95 mmol/L    (98-107)
+eGFR (CKD-EPI)   : 52 mL/min/1.73m2 (>90 normal)
+BUN/Cr ratio     : 15.9         (10-20)
+Urine ACR        : 146 mg/g Cr  (<30)
+
+========================== LIVER FUNCTION ===========================
+T.Bilirubin      : 1.8 mg/dL    (0.2-1.2)
+D.Bilirubin      : 0.6 mg/dL    (0.0-0.3)
+AST/SGOT         : 61 U/L       (5-40)
+ALT/SGPT         : 74 U/L       (5-41)
+ALP              : 168 U/L      (40-129)
+GGT              : 102 U/L      (10-71)
+Total Protein    : 6.5 g/dL     (6.6-8.3)
+Albumin          : 3.2 g/dL     (3.5-5.2)
+Globulin(calc)   : 3.3 g/dL     (2.3-3.5)
+A/G ratio        : 0.97         (1.1-2.2)
+
+=========================== LIPID PANEL ============================
+TC               : 268 mg/dL    (<200)
+TG               : 312 mg/dL    (<150)
+HDL-C            : 34 mg/dL     (>40)
+LDL-C(calc)      : 171 mg/dL    (<100)
+VLDL-C(calc)     : 62 mg/dL     (5-40)
+Non-HDL-C        : 234 mg/dL    (<130)
+TC/HDL ratio     : 7.9          (3.5-5.0 desirable)
+LDL/HDL ratio    : 5.0          (1.5-3.5)
+
+===================== THYROID + VITAMIN + IRON =====================
+TSH(3rd gen)     : 6.92 uIU/mL  (0.27-4.20)
+FT4              : 0.78 ng/dL   (0.93-1.70)
+FT3              : 2.1 pg/mL    (2.3-4.2)
+25-OH Vit D      : 14.2 ng/mL   (30-100)
+Vit B12          : 188 pg/mL    (211-911)
+Ferritin         : 18 ng/mL     (30-400)
+Serum Iron       : 39 ug/dL     (65-175)
+TIBC             : 436 ug/dL    (250-450)
+Transf Sat(calc) : 08.9 %       (20-50)
+
+=========================== CARDIAC/RISK ===========================
+hs-CRP           : 6.8 mg/L      (<3 low risk)
+Homocysteine     : 18.4 umol/L   (5-15)
+Lp(a)            : 62 mg/dL      (<30)
+ApoB             : 142 mg/dL     (<90)
+NT-proBNP        : 186 pg/mL     (<125)
+Trop-I(hs)       : 15.1 ng/L     (<19, interpret clinically)
+
+============================= NOTES =================================
+1) "Sample mildly hemolyzed" flagged by analyzer.
+2) "Fasting uncertain" - interpret glycemic/lipid with caution.
+3) Correlate with BP log: 154/96, 149/92, 158/94 (home monitor entries).
+4) Current meds (self-reported, poor adherence):
+   - Telmisartan 40 (missed 3-4 doses/week)
+   - Rosuvastatin 10 HS (stopped x 2 wks)
+   - Metformin 500 OD (irregular)
+5) Symptoms: early morning headache, exertional fatigue, nocturia x2, poor sleep.
+6) Follow-up advised: Nephrology + Endocrinology + Cardiology.
+7) This report contains mixed units, calculated values, and analyzer comments.

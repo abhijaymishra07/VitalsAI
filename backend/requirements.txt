@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlmodel
+alembic
+pydantic-settings
+numpy
+scikit-learn
+pytesseract
+Pillow
+pypdf
+pymupdf
+openai
+httpx
+qdrant-client

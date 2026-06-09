@@ -1,0 +1,13 @@
+streamlit>=1.32.0
+fastapi
+python-multipart
+sqlmodel
+pydantic-settings
+numpy
+pytesseract
+Pillow
+pypdf
+pymupdf
+openai
+httpx
+qdrant-client
