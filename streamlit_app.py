@@ -20,7 +20,7 @@ try:
 except Exception:
     pass
 
-os.environ.setdefault("DATABASE_URL", f"sqlite:///{BACKEND / 'health_copilot.db'}")
+os.environ.setdefault("DATABASE_URL", "sqlite:////tmp/vitalsai_health.db")
 os.environ.setdefault("QDRANT_PREFER_LOCAL", "true")
 os.environ.setdefault("RAG_ENABLED", "true")
 
@@ -37,8 +37,9 @@ from app.services.vector_service import SemanticSearchService  # noqa: E402
 
 
 @st.cache_resource
-def bootstrap() -> None:
+def bootstrap():
     init_db()
+    return True
 
 
 def get_snapshot():
