@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, ClassVar, Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -9,7 +9,7 @@ def _utc_now() -> datetime:
 
 
 class MedicalReport(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar[dict[str, Any]] = {"extend_existing": True}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
@@ -20,7 +20,7 @@ class MedicalReport(SQLModel, table=True):
 
 
 class HealthMetric(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar[dict[str, Any]] = {"extend_existing": True}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     report_id: int = Field(index=True)
@@ -34,7 +34,7 @@ class HealthMetric(SQLModel, table=True):
 
 
 class ChatMessage(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar[dict[str, Any]] = {"extend_existing": True}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     role: str
@@ -43,7 +43,7 @@ class ChatMessage(SQLModel, table=True):
 
 
 class HealthJournal(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar[dict[str, Any]] = {"extend_existing": True}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     mood: Optional[str] = None
@@ -55,7 +55,7 @@ class HealthJournal(SQLModel, table=True):
 
 
 class MedicalTerm(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar[dict[str, Any]] = {"extend_existing": True}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     term: str = Field(index=True, unique=True)
