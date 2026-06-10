@@ -23,7 +23,8 @@ MEDICAL_TERM_ALIASES: dict[str, str] = {
     "vit b": "vitamin b",
     "folic acid": "folate",
     "folic": "folate",
-    "blood sugar": "glucose",
+    "blood urea nitrogen": "bun",
+    "blood urea": "urea",
     "fasting glucose": "glucose",
     "fbs": "glucose",
     "sugar": "glucose",
@@ -448,7 +449,28 @@ class AIService:
             return True
         return any(phrase in normalized for phrase in ("what else", "anything else", "other abnormal", "more abnormal"))
 
+    def _extract_disease_topic(self, msg: str) -> str | None:
+        patterns = [
+            r"what disease(?:s)?(?: is| are)? linked to\s+(.+)",
+            r"what condition(?:s)?(?: is| are)? linked to\s+(.+)",
+            r"what(?:'s| is| are) (.+?) linked to",
+            r"disease(?:s)? linked to\s+(.+)",
+            r"linked to\s+(.+?)(?:\?|$)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, msg.strip().rstrip("?.!"), flags=re.IGNORECASE)
+            if match:
+                term = match.group(1).strip().rstrip("?.!")
+                term = re.sub(r"\b(in my report|from my report)\b", "", term, flags=re.IGNORECASE).strip()
+                if term and not self._is_vague_term(term):
+                    return self._canonical_medical_term(term)
+        return None
+
     def _extract_term_from_question(self, msg: str) -> str | None:
+        disease_topic = self._extract_disease_topic(msg)
+        if disease_topic:
+            return disease_topic
+
         patterns = [
             r"(?:what is|what's|whats|explain|meaning of|define|tell me about|describe)\s+(.+)",
             r"what does\s+(.+?)\s+mean\b",
@@ -472,19 +494,51 @@ class AIService:
 
     def _find_metric_for_term(self, term: str, snapshot: HealthSnapshot) -> MetricSnapshot | None:
         needle = self._normalize_lab_abbrev(term)
-        if not needle:
-            return None
+        canonical = self._canonical_medical_term(term)
+        search_keys = {needle, canonical, term.strip().lower()}
 
         for metric in snapshot.metrics:
             name = metric.metric_name.lower()
-            if name == needle or needle in name or name in needle:
+            if name in search_keys or any(k in name or name in k for k in search_keys if len(k) > 2):
                 return metric
+
+        keyword_groups = {
+            "blood urea nitrogen": ["blood urea nitrogen", "bun", "urea"],
+            "bun": ["blood urea nitrogen", "bun", "urea"],
+            "urea": ["urea", "blood urea nitrogen", "bun"],
+            "vitamin c": ["vitamin c", "ascorbic"],
+            "vitamin d": ["vitamin d", "25-oh", "25 - oh"],
+            "vitamin b12": ["vitamin b12", "b12", "cobalamin"],
+            "glucose": ["glucose", "fbs", "fasting glucose", "eag", "hba1c"],
+            "hba1c": ["hba1c", "glycated hemoglobin", "eag"],
+            "creatinine": ["creatinine", "egfr"],
+            "hemoglobin": ["hemoglobin", "haemoglobin", "hb", "hgb"],
+            "cholesterol": ["cholesterol", "total cholesterol"],
+            "triglycerides": ["triglyceride", "tg", "vldl"],
+        }
+        for key in search_keys:
+            for group, keywords in keyword_groups.items():
+                if key == group or group in key or key in group:
+                    for metric in snapshot.metrics:
+                        name = metric.metric_name.lower()
+                        if any(kw in name for kw in keywords):
+                            return metric
 
         for metric in snapshot.metrics:
             first_token = metric.metric_name.lower().split()[0]
-            if first_token == needle or needle == first_token:
+            if first_token in search_keys:
                 return metric
         return None
+
+    @staticmethod
+    def _format_metric_ref(metric: MetricSnapshot) -> str:
+        if metric.reference_min is not None and metric.reference_max is not None:
+            if metric.reference_min == 0 and metric.reference_max == 0:
+                return f" ({metric.unit})" if metric.unit else ""
+            return f" (reference {metric.reference_min}–{metric.reference_max} {metric.unit})".strip()
+        if metric.unit:
+            return f" ({metric.unit})"
+        return ""
 
     def _wants_disease_detail(self, msg: str) -> bool:
         normalized = self._normalize_msg(msg)
@@ -538,16 +592,20 @@ class AIService:
 
     def _guess_term_from_text(self, text: str, snapshot: HealthSnapshot) -> str | None:
         lowered = text.lower()
+        disease_topic = self._extract_disease_topic(lowered)
+        if disease_topic:
+            return disease_topic
         profile = find_condition_profile(lowered)
         if profile:
             return profile["aliases"][0]
         for metric in snapshot.metrics:
             name = metric.metric_name.lower()
-            if name in lowered or name.split()[0] in lowered:
+            if name in lowered:
                 return metric.metric_name
-        for word in re.findall(r"[a-z0-9]{2,}", lowered):
-            if find_condition_profile(word) or self._find_metric_for_term(word, snapshot):
-                return word
+        for metric in snapshot.metrics:
+            token = metric.metric_name.lower().split()[0]
+            if len(token) > 3 and token in lowered:
+                return metric.metric_name
         return None
 
     def _is_vague_term(self, term: str) -> bool:
@@ -579,23 +637,28 @@ class AIService:
         history: list[tuple[str, str]],
         snapshot: HealthSnapshot,
     ) -> str | None:
+        disease_topic = self._extract_disease_topic(msg)
+        if disease_topic:
+            return disease_topic
+
         extracted = self._extract_term_from_question(msg)
         if extracted:
             cleaned = extracted.strip().rstrip("?.!")
             if not self._is_vague_term(cleaned):
                 if find_condition_profile(cleaned) or self._find_metric_for_term(cleaned, snapshot):
                     return cleaned
-                if len(cleaned.split()) <= 4:
+                if len(cleaned.split()) <= 6:
                     return cleaned
 
         if not self._is_follow_up_question(msg) and not self._wants_disease_detail(msg):
             return None
 
         for role, text in reversed(history[-10:]):
-            if role == "user":
-                term = self._extract_term_from_question(self._normalize_msg(text))
-                if term:
-                    return term
+            if role != "user":
+                continue
+            term = self._extract_term_from_question(self._normalize_msg(text))
+            if term:
+                return term
             guessed = self._guess_term_from_text(text, snapshot)
             if guessed:
                 return guessed
@@ -630,16 +693,88 @@ class AIService:
         lines.extend(f"• {item}" for item in treatment)
 
         if metric:
-            ref = ""
-            if metric.reference_min is not None and metric.reference_max is not None:
-                ref = f" (reference {metric.reference_min}-{metric.reference_max} {metric.unit})"
+            ref = self._format_metric_ref(metric)
             status = "above reference" if metric.is_abnormal else "within reference"
             lines.extend(["", "Your latest lab value:", f"• {metric.metric_name}: {metric.metric_value} {metric.unit} — {status}{ref}"])
+        elif snapshot.metrics:
+            related = self._find_metric_for_term(term, snapshot)
+            if related:
+                ref = self._format_metric_ref(related)
+                status = "above reference" if related.is_abnormal else "within reference"
+                lines.extend(
+                    ["", "Your latest lab value:", f"• {related.metric_name}: {related.metric_value} {related.unit} — {status}{ref}"]
+                )
 
         lines.append("\nThis is educational guidance, not a diagnosis. Please confirm with your doctor.")
         return "\n".join(lines)
 
+    def _is_priority_abnormal_question(self, msg: str) -> bool:
+        return any(
+            phrase in msg
+            for phrase in (
+                "most concerning",
+                "most conerning",
+                "most serious",
+                "most important",
+                "worst value",
+                "worst lab",
+                "biggest concern",
+                "which value",
+                "which lab",
+                "which marker",
+                "should i worry",
+                "worry most",
+                "priority",
+            )
+        )
+
+    def _abnormal_severity(self, metric: MetricSnapshot) -> float:
+        invalid_ref = (
+            metric.reference_min is not None
+            and metric.reference_max is not None
+            and metric.reference_min == 0
+            and metric.reference_max == 0
+        )
+        if invalid_ref:
+            return 0.1
+        if metric.reference_max is not None and metric.metric_value > metric.reference_max and metric.reference_max > 0:
+            return (metric.metric_value - metric.reference_max) / metric.reference_max
+        if metric.reference_min is not None and metric.metric_value < metric.reference_min and metric.reference_min > 0:
+            return (metric.reference_min - metric.metric_value) / metric.reference_min
+        return 0.3
+
+    def _most_concerning_reply(self, abnormal: list[MetricSnapshot]) -> str:
+        if not abnormal:
+            return "No abnormal markers flagged in your uploaded reports yet."
+
+        ranked = sorted(abnormal, key=self._abnormal_severity, reverse=True)
+        top = ranked[0]
+        ref = self._format_metric_ref(top)
+        direction = "high" if top.reference_max and top.metric_value > top.reference_max else (
+            "low" if top.reference_min and top.metric_value < top.reference_min else "out of range"
+        )
+
+        lines = [
+            f"Based on how far values sit outside reference ranges, the most concerning signal right now is:",
+            f"• **{top.metric_name}:** {top.metric_value} {top.unit} — {direction}{ref}",
+            "",
+            "Why it stands out: it has the largest gap from its reference range among your flagged labs.",
+            "",
+            "Other abnormal values to review with your doctor:",
+        ]
+        for m in ranked[1:4]:
+            mref = self._format_metric_ref(m)
+            lines.append(f"• {m.metric_name}: {m.metric_value} {m.unit}{mref}")
+
+        lines.append(
+            "\nAsk \"what disease is linked to [marker]\" for risks and next steps. "
+            "This is educational guidance, not a diagnosis."
+        )
+        return "\n".join(lines)
+
     def _is_comparison_question(self, msg: str) -> bool:
+        if self._extract_disease_topic(msg):
+            return False
         return bool(
             re.search(
                 r"\b(same|equal|identical|difference|different|compare|comparison|vs|versus|related|relation|linked|connection)\b",
@@ -817,13 +952,9 @@ class AIService:
             lines.append("Your flagged values:")
 
         for metric in abnormal:
-            ref = ""
-            if metric.reference_min is not None and metric.reference_max is not None:
-                ref = f" (ref {metric.reference_min}-{metric.reference_max} {metric.unit})".strip()
-            elif metric.unit:
-                ref = f" ({metric.unit})"
-            direction = "high" if metric.reference_max is not None and metric.metric_value > metric.reference_max else (
-                "low" if metric.reference_min is not None and metric.metric_value < metric.reference_min else "out of range"
+            ref = self._format_metric_ref(metric)
+            direction = "high" if metric.reference_max is not None and metric.reference_max > 0 and metric.metric_value > metric.reference_max else (
+                "low" if metric.reference_min is not None and metric.reference_min > 0 and metric.metric_value < metric.reference_min else "out of range"
             )
             lines.append(f"• {metric.metric_name}: {metric.metric_value} {metric.unit} — {direction}{ref}")
 
@@ -1009,6 +1140,9 @@ class AIService:
 
         if self._is_more_abnormal_question(msg):
             return self._abnormal_list_reply(abnormal)
+
+        if self._is_priority_abnormal_question(msg):
+            return self._most_concerning_reply(abnormal)
 
         topic = self._resolve_conversation_topic(msg, history, snapshot)
         if topic and self._wants_disease_detail(msg):
