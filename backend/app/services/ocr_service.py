@@ -1,6 +1,5 @@
 from io import BytesIO
 
-from fastapi import UploadFile
 from PIL import Image
 import pytesseract
 from pypdf import PdfReader
@@ -117,27 +116,9 @@ class OCRService:
         return "", "pdf_needs_tesseract"
 
     @staticmethod
-    async def extract_text(file: UploadFile) -> tuple[str, str]:
-        file_name = file.filename or ""
+    async def extract_text(file) -> tuple[str, str]:
         content = await file.read()
-
-        if file_name.lower().endswith(".txt"):
-            return OCRService._truncate(content.decode("utf-8", errors="ignore")), "txt"
-
-        if file_name.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-            image = Image.open(BytesIO(content))
-            if image.width > MAX_IMAGE_WIDTH:
-                ratio = MAX_IMAGE_WIDTH / image.width
-                image = image.resize((MAX_IMAGE_WIDTH, int(image.height * ratio)))
-            if not OCRService.tesseract_available():
-                return "", "image_needs_tesseract"
-            text = OCRService._ocr_image(image)
-            return OCRService._truncate(text), "image_ocr"
-
-        if file_name.lower().endswith(".pdf"):
-            return OCRService.extract_pdf(content)
-
-        return OCRService._truncate(content.decode("utf-8", errors="ignore")), "binary_guess"
+        return OCRService.extract_text_from_bytes(file.filename or "", content)
 
     @staticmethod
     def extract_text_from_bytes(filename: str, content: bytes) -> tuple[str, str]:
