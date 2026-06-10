@@ -19,8 +19,8 @@ except Exception:
     pass
 
 os.environ.setdefault("DATABASE_URL", "sqlite:////tmp/vitalsai_health.db")
-os.environ.setdefault("QDRANT_PREFER_LOCAL", "true")
-os.environ.setdefault("RAG_ENABLED", "true")
+os.environ.setdefault("QDRANT_PREFER_LOCAL", "false")
+os.environ.setdefault("RAG_ENABLED", "false")
 
 from sqlmodel import Session, select  # noqa: E402
 

@@ -4,10 +4,18 @@ from pathlib import Path
 from typing import Any, Literal
 
 from openai import OpenAI
-from qdrant_client import QdrantClient
-from qdrant_client.http import models as qmodels
 
 from app.core.config import settings, get_qdrant_url
+
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.http import models as qmodels
+
+    QDRANT_AVAILABLE = True
+except ImportError:
+    QdrantClient = None  # type: ignore[misc, assignment]
+    qmodels = None  # type: ignore[assignment]
+    QDRANT_AVAILABLE = False
 
 COLLECTION = "health_report_chunks"
 CHUNK_SIZE = 600
@@ -40,7 +48,7 @@ def _point_id(report_id: int, chunk_index: int) -> int:
 
 
 class RAGService:
-    _client: QdrantClient | None = None
+    _client: Any = None
     _mode: QdrantMode = "none"
     _collection_ready = False
 
@@ -50,8 +58,8 @@ class RAGService:
         return cls._mode
 
     @classmethod
-    def _qdrant(cls) -> QdrantClient | None:
-        if not settings.rag_enabled:
+    def _qdrant(cls) -> Any:
+        if not settings.rag_enabled or not QDRANT_AVAILABLE:
             cls._mode = "none"
             return None
         if cls._client is not None:
@@ -75,7 +83,7 @@ class RAGService:
         return None
 
     @classmethod
-    def _try_server_client(cls) -> QdrantClient | None:
+    def _try_server_client(cls) -> Any:
         try:
             client = QdrantClient(url=get_qdrant_url(), timeout=5)
             client.get_collections()
@@ -86,7 +94,7 @@ class RAGService:
             return None
 
     @classmethod
-    def _try_local_client(cls) -> QdrantClient | None:
+    def _try_local_client(cls) -> Any:
         try:
             path = Path(settings.qdrant_local_path)
             path.mkdir(parents=True, exist_ok=True)
@@ -106,6 +114,8 @@ class RAGService:
 
     @classmethod
     def ensure_collection(cls) -> bool:
+        if not QDRANT_AVAILABLE:
+            return False
         client = cls._qdrant()
         oai = cls._openai()
         if not client or not oai:
@@ -154,7 +164,7 @@ class RAGService:
         if not vectors:
             return 0
 
-        points: list[qmodels.PointStruct] = []
+        points = []
         for idx, (chunk, vector) in enumerate(zip(chunks, vectors)):
             points.append(
                 qmodels.PointStruct(
